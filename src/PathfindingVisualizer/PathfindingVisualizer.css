@@ -1,0 +1,9 @@
+.grid {
+    display: grid;
+    margin:  3rem auto;
+}
+
+label {
+    width: 100%;
+    display: block;
+}
