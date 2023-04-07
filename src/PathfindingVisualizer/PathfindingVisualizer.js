@@ -147,7 +147,7 @@ const PathfindingVisualizer = () => {
         const node = newGrid[row][col];
         const newNode = {
             ...node,
-            type: 'wall'
+            type: node.type === 'wall' ? 'normal' : 'wall'
         };
         newGrid[row][col] = newNode;
         return newGrid;

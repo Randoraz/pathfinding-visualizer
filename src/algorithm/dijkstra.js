@@ -14,7 +14,8 @@ export const dijkstra = (grid, startNode, endNode) => {
         visitedNodesInOrder.push(closestNode);
 
         if (closestNode === endNode) return visitedNodesInOrder;
-            updateUnvisitedNeighbors(closestNode, grid);
+
+        updateUnvisitedNeighbors(closestNode, grid);
     };
 };
 
