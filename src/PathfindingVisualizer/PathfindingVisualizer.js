@@ -136,6 +136,7 @@ const PathfindingVisualizer = () => {
     const createNode = (node) => {
         return {
             ...node,
+            neighbors: [],
             isVisited: false,
             distance: Infinity,
             previousNode: null
@@ -153,12 +154,12 @@ const PathfindingVisualizer = () => {
         return newGrid;
     };
     
-    const handleChange = (e) => {
-        if(e.target.value > 0)
-            setGridSize(+e.target.value);
-        else
-            setGridSize(1);
-    };
+    // const handleChange = (e) => {
+    //     if(e.target.value > 0)
+    //         setGridSize(+e.target.value);
+    //     else
+    //         setGridSize(1);
+    // };
 
     const handleOnMouseDown = (row, col) => {
         if(costumizingGrid !== 'wall' || isAnimating || grid[row][col].type === 'start' || grid[row][col].type === 'end')
@@ -243,6 +244,16 @@ const PathfindingVisualizer = () => {
         setEndNode(newEndNode);
         setGrid(newGrid);
     };
+
+    const increaseGridsize = () => {
+        if(gridSize < 25)
+            setGridSize(gridSize + 1);
+    };
+
+    const decreaseGridsize = () => {
+        if(gridSize > 1)
+            setGridSize(gridSize - 1);
+    };
     
     return (
         <div className="pathfinding-visualizer">
@@ -257,18 +268,26 @@ const PathfindingVisualizer = () => {
             })}
         </div>
             <form className="grid-form" onSubmit={handleSubmit}>
-                <label htmlFor="grid-size-input">Grid Size</label>
-                <input id="grid-size-input" type="number" min="1" onChange={handleChange} value={gridSize}></input>
-                <br/>
-                <label htmlFor="choose-start-node">Choose Start Node</label>
-                <input id="choose-start-node" type="radio" name="costumize-grid" value="start" onClick={handleChoosing} defaultChecked></input>
-                <label htmlFor="choose-end-node">Choose End Node</label>
-                <input id="choose-end-node" type="radio" name="costumize-grid" value="end" onClick={handleChoosing}></input>
-                <label htmlFor="draw-walls">Draw walls</label>
-                <input id="draw-walls" type="radio" name="costumize-grid" value="wall" onClick={handleChoosing}></input>
-                <br/>
+                <div className="costumize-grid-options">
+                    {/* <label className="gridsize-label" htmlFor="grid-size-input">Grid Size</label>
+                    <input id="grid-size-input" type="number" min="1" onChange={handleChange} value={gridSize}></input> */}
+                    <p>Grid Size</p>
+                    <div className="adjust-gridsize">
+                        <button onClick={increaseGridsize}>+</button>
+                        <p>{gridSize}</p>
+                        <button onClick={decreaseGridsize}>-</button>
+                    </div>
+
+                    <label className="radio-label" htmlFor="choose-start-node">Choose Start Node</label>
+                    <input id="choose-start-node" type="radio" name="costumize-grid" value="start" onClick={handleChoosing} defaultChecked></input>
+
+                    <label className="radio-label" htmlFor="choose-end-node">Choose End Node</label>
+                    <input id="choose-end-node" type="radio" name="costumize-grid" value="end" onClick={handleChoosing}></input>
+
+                    <label className="radio-label" htmlFor="draw-walls">Draw walls</label>
+                    <input id="draw-walls" type="radio" name="costumize-grid" value="wall" onClick={handleChoosing}></input>
+                </div>
                 <button onClick={visualizeDijkstra}>Visualize</button>
-                <br/>
                 <button onClick={resetGrid}>Reset</button>
             </form>
         </div>

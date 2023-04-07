@@ -5,7 +5,109 @@
     column-gap: 0.1rem;
 }
 
+form {
+    margin: auto;
+    color: hsla(240, 100%, 15%, 0.75);
+}
+
+.costumize-grid-options {
+    display: grid;
+    margin: auto;
+    width: 30%;
+    min-width: 25rem;
+    grid-template-columns: 2fr 1fr;
+    align-items: center;
+    text-align: right;
+}
+
+.costumize-grid-options p {
+    font-size: 2rem;
+}
+
+.adjust-gridsize {
+    display: flex;
+}
+
+.adjust-gridsize button {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    margin-left: 1rem;
+    margin-right: 0.6rem;
+    border: 0.2rem solid rgb(75, 155, 255);
+    color: rgb(75, 155, 255);
+    background-color: white;
+    font-size: 2rem;
+}
+
+.adjust-gridsize button:hover, .adjust-gridsize button:focus {
+    border: 0.2rem solid hsla(240, 100%, 15%, 0.75);
+}
+
 label {
     width: 100%;
+    font-size: 2rem;
+}
+
+input {
+    margin-left: 1rem;
+}
+
+input[type=number] {
+    width: 5%;
+    min-width: 5rem;
+    padding: 0.2rem;
+    text-align: center;
+    font-size: 1.6rem;
+    border: 0.1rem solid rgb(75, 155, 255);
+}
+
+input[type=radio] {
+    appearance: none;
+    background-color: white;
+    font: inherit;
+    color: rgb(75, 155, 255);
+    width: 2rem;
+    height: 2rem;
+    border: 0.2rem solid rgb(75, 155, 255);
+    border-radius: 50%;
+    transform: translateY(0.1rem);
+}
+
+input[type="radio"]::before {
+    content: "";
+    position: relative;
+    top: 50%;
+    left: 50%;
     display: block;
+    width: 1.2rem;
+    height: 1.2rem;
+    transform: scale(0);
+    border-radius: 50%;
+    transition: 120ms transform ease-in-out;
+    box-shadow: inset 1rem 1rem rgb(75, 155, 255);
+}
+
+input[type="radio"]:checked::before {
+    transform: scale(1) translate(-50%, -50%);
+}
+
+input[type="radio"]:focus, input[type="radio"]:hover {
+    outline: none;
+    border: 0.2rem solid hsla(240, 100%, 15%, 0.75);
+  }
+
+form > button {
+    margin: 2rem;
+    width: 15%;
+    min-width: 12rem;
+    height: 5rem;
+    background-color: rgb(75, 155, 255);
+    color: white;
+    font-size: 2.4rem;
+    border: 0.1rem solid hsla(240, 100%, 15%, 0.75);
+}
+
+form > button:hover {
+    background-color: hsla(240, 100%, 15%, 0.75);
 }
