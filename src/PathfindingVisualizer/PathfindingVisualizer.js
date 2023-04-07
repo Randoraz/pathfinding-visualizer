@@ -1,21 +1,18 @@
 import React, { useEffect, useState } from "react";
 import Node from "../Node/Node";
 import './PathfindingVisualizer.css';
-import { dijkstra } from "../algorithm/dijkstra";
+import { dijkstra, getNodesInShortestPathOrder } from "../algorithm/dijkstra";
 
 const PathfindingVisualizer = () => {
     const [gridSize, setGridSize] = useState(15);
     const [grid, setGrid] = useState([]);
-    const [startNode, setStartNode] = useState({col: 2, row: 7, isStart: true, isEnd: false});
-    const [endNode, setEndNode] = useState({col: 12, row: 7, isStart: false, isEnd: true});
+    const [startNode, setStartNode] = useState({col: 2, row: 7, type: 'start'});
+    const [endNode, setEndNode] = useState({col: 12, row: 7, type: 'end'});
     const [costumizingGrid, setCostumizingGrid] = useState('start');
+    const [isAnimating, setIsAnimating] = useState(false);
     const [mouseIsPressed, setMouseIsPressed] = useState(false);
 
     useEffect(() => {
-        resetGrid();
-    }, [gridSize]);
-
-    const resetGrid = () => {
         const nodesArray = [];
         for(let row = 0; row < gridSize; row++) {
             const currentRow = [];
@@ -24,8 +21,7 @@ const PathfindingVisualizer = () => {
                 const currentNode = {
                     col,
                     row,
-                    isStart: compareNodes({col: col, row: row}, startNode),
-                    isEnd: compareNodes({col: col, row: row}, endNode)
+                    type: compareNodes({col: col, row: row}, startNode) ? 'start' : compareNodes({col: col, row: row}, endNode) ? 'end' : 'normal'
                 };
 
                 currentRow.push(currentNode);
@@ -35,6 +31,43 @@ const PathfindingVisualizer = () => {
         };
         
         setGrid(getInitialGrid(nodesArray));
+       // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [gridSize]);
+
+    const resetGrid = () => {
+        const newGrid = grid.map(row => {
+            return row.map(node => {
+                if(node.type === 'start') {
+                    document.getElementById(`node-${node.row}-${node.col}`).className = 'node start-node';
+                    return {
+                        ...node,
+                        type: 'start'
+                    };
+                }
+                else if(node.type === 'end') {
+                    document.getElementById(`node-${node.row}-${node.col}`).className = 'node end-node';
+                    return {
+                        ...node,
+                        type: 'end'
+                    };
+                }
+                else if(node.type === 'wall') {
+                    document.getElementById(`node-${node.row}-${node.col}`).className = 'node wall-node';
+                    return {
+                        ...node,
+                        type: 'wall'
+                    };
+                }
+                else {
+                    document.getElementById(`node-${node.row}-${node.col}`).className = 'node';
+                    return {
+                        ...node,
+                        type: 'normal'
+                    };
+                };
+            });
+        });
+        setGrid(newGrid);
     };
 
     const compareNodes = (node1, node2) => {
@@ -55,17 +88,39 @@ const PathfindingVisualizer = () => {
         return initialGrid;
     };
 
-    const animateDijkstra = (visitedNodesInOrder) => {
+    const animateDijkstra = (visitedNodesInOrder, nodesInShortestPathOrder) => {
+        setIsAnimating(true);
         visitedNodesInOrder.forEach((node, nodeIndex) => {
+            if(nodeIndex === visitedNodesInOrder.length - 1) {
+                setTimeout(() => {
+                    animateShortestPath(nodesInShortestPathOrder);
+                }, 20 * nodeIndex);
+                return;
+            };
+
             setTimeout(() => {
-                const newGrid = grid.slice();
-                const newNode = {
-                    ...node,
-                    isVisited: true
-                };
-                newGrid[node.row][node.col] = newNode;
-                setGrid(newGrid);
+                // const newGrid = grid.slice();
+                // const newNode = {
+                //     ...node,
+                //     isVisited: true
+                // };
+                // newGrid[node.row][node.col] = newNode;
+                //setGrid(newGrid);
+                if(node.type !== 'start' && node.type !== 'end')
+                    document.getElementById(`node-${node.row}-${node.col}`).className = 'node visited-node';
+            }, 15 * nodeIndex);
+        });
+    };
+
+    const animateShortestPath = (nodesInShortestPathOrder) => {
+        nodesInShortestPathOrder.forEach((node, nodeIndex) => {
+            setTimeout(() => {
+                if(node.type !== 'start' && node.type !== 'end')
+                    document.getElementById(`node-${node.row}-${node.col}`).className = 'node path-node';
             }, 20 * nodeIndex);
+
+            if(nodeIndex === nodesInShortestPathOrder.length - 1)
+                setIsAnimating(false);
         });
     };
 
@@ -74,15 +129,15 @@ const PathfindingVisualizer = () => {
         const start = functionGrid[startNode.row][startNode.col];
         const end = functionGrid[endNode.row][endNode.col];
         const visitedNodesInOrder = dijkstra(functionGrid, start, end);
-        animateDijkstra(visitedNodesInOrder);
+        const nodesInShortestPathOrder = getNodesInShortestPathOrder(end);
+        animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder);
     };
 
     const createNode = (node) => {
         return {
             ...node,
-            distance: Infinity,
             isVisited: false,
-            isWall: false,
+            distance: Infinity,
             previousNode: null
         };
     };
@@ -90,45 +145,14 @@ const PathfindingVisualizer = () => {
     const getNewGridWithWallToggled = (grid, row, col) => {
         const newGrid = grid.map(row => row.map(node => { return {...node};}));
         const node = newGrid[row][col];
-        let newNode;
-        if(!node.isStart && !node.isEnd) {
-            newNode = {
-                ...node,
-                isWall: !node.isWall
-            };
+        const newNode = {
+            ...node,
+            type: 'wall'
         };
         newGrid[row][col] = newNode;
         return newGrid;
     };
-
-    const changeStartNode = (grid, row, col) => {
-        const newGrid = grid.map(row => row.map(node => { return {...node, isStart: false};}));
-        const node = newGrid[row][col];
-        const newStartNode = {
-            ...node,
-            isWall: false,
-            isStart: true
-        };
-
-        newGrid[row][col] = newStartNode;
-        setStartNode(newStartNode);
-        setGrid(newGrid);
-    };
-
-    const changeEndNode = (grid, row, col) => {
-        const newGrid = grid.map(row => row.map(node => { return {...node, isEnd: false};}));
-        const node = newGrid[row][col];
-        const newEndNode = {
-            ...node,
-            isWall: false,
-            isEnd: true
-        };
-
-        newGrid[row][col] = newEndNode;
-        setEndNode(newEndNode);
-        setGrid(newGrid);
-    };
-
+    
     const handleChange = (e) => {
         if(e.target.value > 0)
             setGridSize(+e.target.value);
@@ -137,7 +161,7 @@ const PathfindingVisualizer = () => {
     };
 
     const handleOnMouseDown = (row, col) => {
-        if(costumizingGrid === 'start' || costumizingGrid === 'end')
+        if(costumizingGrid !== 'wall' || isAnimating || grid[row][col].type === 'start' || grid[row][col].type === 'end')
             return;
         
         const newGrid = getNewGridWithWallToggled(grid, row, col);
@@ -146,7 +170,7 @@ const PathfindingVisualizer = () => {
     };
 
     const handleOnMouseEnter = (row, col) => {
-        if(!mouseIsPressed || !costumizingGrid === 'wall')
+        if(!mouseIsPressed || isAnimating || grid[row][col].type === 'start' || grid[row][col].type === 'end')
             return;
 
         const newGrid = getNewGridWithWallToggled(grid, row, col);
@@ -178,9 +202,46 @@ const PathfindingVisualizer = () => {
                     return;
                     
                 changeEndNode(grid, node.row, node.col);
-            default:
                 return;
+            default:
+                break;
         };
+    };
+
+    const changeStartNode = (grid, row, col) => {
+        const newGrid = grid.map(row => row.map(node => {
+            if(node.type === 'start')
+                return {...node, type: 'normal'};
+            else
+                return {...node};
+        }));
+        const node = newGrid[row][col];
+        const newStartNode = {
+            ...node,
+            type: 'start'
+        };
+
+        newGrid[row][col] = newStartNode;
+        setStartNode(newStartNode);
+        setGrid(newGrid);
+    };
+
+    const changeEndNode = (grid, row, col) => {
+        const newGrid = grid.map(row => row.map(node => {
+            if(node.type === 'end')
+                return {...node, type: 'normal'};
+            else
+                return {...node};
+        }));
+        const node = newGrid[row][col];
+        const newEndNode = {
+            ...node,
+            type: 'end'
+        };
+
+        newGrid[row][col] = newEndNode;
+        setEndNode(newEndNode);
+        setGrid(newGrid);
     };
     
     return (
