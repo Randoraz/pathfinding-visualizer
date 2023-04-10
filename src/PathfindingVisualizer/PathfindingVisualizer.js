@@ -14,20 +14,47 @@ const PathfindingVisualizer = () => {
 
     useEffect(() => {
         const nodesArray = [];
-        for(let row = 0; row < gridSize; row++) {
-            const currentRow = [];
 
-            for(let col = 0; col < gridSize; col++) {
-                const currentNode = {
-                    col,
-                    row,
-                    type: compareNodes({col: col, row: row}, startNode) ? 'start' : compareNodes({col: col, row: row}, endNode) ? 'end' : 'normal'
+        if(grid.length > 0) {
+            for(let row = 0; row < gridSize; row++) {
+                const currentRow = [];
+                for(let col = 0; col < gridSize; col++) {
+                    if(grid[row] !== undefined && grid[row][col] !== undefined) {
+                        const currentNode = {
+                            col: grid[row][col].col,
+                            row: grid[row][col].row,
+                            type: grid[row][col].type
+                        };
+                        currentRow.push(currentNode);
+
+                    } else {
+                        const currentNode = {
+                            col,
+                            row,
+                            type: compareNodes({col: col, row: row}, startNode) ? 'start' : compareNodes({col: col, row: row}, endNode) ? 'end' : 'normal'
+                        };
+                        currentRow.push(currentNode);
+                    };
                 };
-
-                currentRow.push(currentNode);
+                
+                nodesArray.push(currentRow);
             };
-            
-            nodesArray.push(currentRow);
+        } else {
+            for(let row = 0; row < gridSize; row++) {
+                const currentRow = [];
+    
+                for(let col = 0; col < gridSize; col++) {
+                    const currentNode = {
+                        col,
+                        row,
+                        type: compareNodes({col: col, row: row}, startNode) ? 'start' : compareNodes({col: col, row: row}, endNode) ? 'end' : 'normal'
+                    };
+    
+                    currentRow.push(currentNode);
+                };
+                
+                nodesArray.push(currentRow);
+            };
         };
         
         setGrid(getInitialGrid(nodesArray));
@@ -144,14 +171,20 @@ const PathfindingVisualizer = () => {
     };
 
     const getNewGridWithWallToggled = (grid, row, col) => {
-        const newGrid = grid.map(row => row.map(node => { return {...node};}));
-        const node = newGrid[row][col];
-        const newNode = {
-            ...node,
-            type: node.type === 'wall' ? 'normal' : 'wall'
-        };
-        newGrid[row][col] = newNode;
-        return newGrid;
+        // const newGrid = grid.map(row => row.map(node => { return {...node};}));
+        // const node = newGrid[row][col];
+        // const newNode = {
+        //     ...node,
+        //     type: node.type === 'wall' ? 'normal' : 'wall'
+        // };
+        // newGrid[row][col] = newNode;
+        // return newGrid;
+        grid[row][col].type = grid[row][col].type === 'wall' ? 'normal' : 'wall';
+
+        if(grid[row][col].type === 'wall')
+            document.getElementById(`node-${row}-${col}`).className = 'node wall-node';
+        else
+            document.getElementById(`node-${row}-${col}`).className = 'node';
     };
     
     // const handleChange = (e) => {
@@ -165,17 +198,17 @@ const PathfindingVisualizer = () => {
         if(costumizingGrid !== 'wall' || isAnimating || grid[row][col].type === 'start' || grid[row][col].type === 'end')
             return;
         
-        const newGrid = getNewGridWithWallToggled(grid, row, col);
+        getNewGridWithWallToggled(grid, row, col);
         setMouseIsPressed(true);
-        setGrid(newGrid);
+        //setGrid(newGrid);
     };
 
     const handleOnMouseEnter = (row, col) => {
-        if(!mouseIsPressed || isAnimating || grid[row][col].type === 'start' || grid[row][col].type === 'end')
+        if(!mouseIsPressed || costumizingGrid !== 'wall' || isAnimating || grid[row][col].type === 'start' || grid[row][col].type === 'end')
             return;
 
-        const newGrid = getNewGridWithWallToggled(grid, row, col);
-        setGrid(newGrid);
+        getNewGridWithWallToggled(grid, row, col);
+        //setGrid(newGrid);
     };
 
     const handleOnMouseUp = () => {
@@ -257,7 +290,7 @@ const PathfindingVisualizer = () => {
     
     return (
         <div className="pathfinding-visualizer">
-            <div className="grid" style={{gridTemplateColumns: `repeat(${gridSize}, 3rem)`, width: `calc(${gridSize}*3rem)`}}>
+            <div className="grid" onMouseLeave={handleOnMouseUp} style={{gridTemplateColumns: `repeat(${gridSize}, 3rem)`, width: `calc(${gridSize}*3rem)`}}>
             {grid.map((row, rowIndex) => {
                 return row.map((node, nodeIndex) => <Node node={node} 
                                                     onNodeChange={handleNodeChange}

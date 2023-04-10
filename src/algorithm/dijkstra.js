@@ -1,12 +1,18 @@
+import MinHeap from './MinHeap';
+require('./MinHeap');
+
 export const dijkstra = (grid, startNode, endNode) => {
     const visitedNodesInOrder = [];
     startNode.distance = 0;
     const unvisitedNodes = getAllNodes(grid);
+    //const unvisitedNodesHeap = new MinHeap();
     unvisitedNodes.forEach(node => getNeighbors(node, grid));
+    //unvisitedNodesHeap.add(startNode);
     while (!!unvisitedNodes.length) {
         sortNodesByDistance(unvisitedNodes);
         const closestNode = unvisitedNodes.shift();
-        
+        //const closestNode = unvisitedNodesHeap.popMin();
+
         if (closestNode.type === 'wall') continue;
         
         if (closestNode.distance === Infinity) return visitedNodesInOrder;
@@ -17,6 +23,10 @@ export const dijkstra = (grid, startNode, endNode) => {
         if (closestNode === endNode) return visitedNodesInOrder;
 
         updateUnvisitedNeighbors(closestNode, grid);
+        // closestNode.neighbors.forEach(neighbor => {
+        //     if(!neighbor.isVisited)
+        //         unvisitedNodesHeap.add(neighbor);
+        // });
     };
 };
 
