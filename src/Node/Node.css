@@ -2,6 +2,19 @@
     height: 3rem;
     width: 3rem;
     border: 0.1rem solid rgb(75, 155, 255);
+    animation: 500ms nodeAnimation 1 alternate;
+    animation-timing-function: ease-in;
+    animation-delay: 0;
+    animation-fill-mode: forwards;
+    animation-play-state: running;
+}
+
+.destroy-node {
+    animation: 500ms destroyAnimation 1 alternate;
+    animation-timing-function: ease-in;
+    animation-delay: 0;
+    animation-fill-mode: forwards;
+    animation-play-state: running;
 }
 
 .start-node {
@@ -33,6 +46,26 @@
     animation-iteration-count: 1;
     animation-fill-mode: forwards;
     animation-play-state: running;
+}
+
+@keyframes nodeAnimation {
+    from {
+      transform: scale(0);
+    }
+  
+    to {
+      transform: scale(1);
+    }
+}
+
+@keyframes destroyAnimation {
+    from {
+      transform: scale(1);
+    }
+  
+    to {
+      transform: scale(0);
+    }
 }
 
 @keyframes visitedAnimation {

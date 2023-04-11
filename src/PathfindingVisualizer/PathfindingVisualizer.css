@@ -3,6 +3,7 @@
     margin:  3rem auto;
     row-gap: 0.1rem;
     column-gap: 0.1rem;
+    transition: 500ms;  
 }
 
 form {

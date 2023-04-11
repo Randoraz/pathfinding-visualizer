@@ -279,13 +279,29 @@ const PathfindingVisualizer = () => {
     };
 
     const increaseGridsize = () => {
-        if(gridSize < 25)
-            setGridSize(gridSize + 1);
+        if(gridSize >= 25)
+            return;
+
+            setTimeout(() => {
+                setGridSize(gridSize + 1);
+            }, 500);
     };
 
     const decreaseGridsize = () => {
-        if(gridSize > 1)
+        if(gridSize <= 1)
+            return;
+
+        for(let row = 0; row < gridSize; row++) {
+            document.getElementById(`node-${row}-${gridSize - 1}`).className = 'node destroy-node';
+        }
+
+        for(let col = 0; col < gridSize; col++) {
+            document.getElementById(`node-${gridSize - 1}-${col}`).className = 'node destroy-node';
+        }
+
+        setTimeout(() => {
             setGridSize(gridSize - 1);
+        }, 500);
     };
     
     return (
