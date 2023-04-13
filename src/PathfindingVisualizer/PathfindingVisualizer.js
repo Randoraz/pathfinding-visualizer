@@ -306,6 +306,7 @@ const PathfindingVisualizer = () => {
     
     return (
         <div className="pathfinding-visualizer">
+            <h1>Pathfinding Visualizer</h1>
             <div className="grid" onMouseLeave={handleOnMouseUp} style={{gridTemplateColumns: `repeat(${gridSize}, 3rem)`, width: `calc(${gridSize}*3rem)`}}>
             {grid.map((row, rowIndex) => {
                 return row.map((node, nodeIndex) => <Node node={node} 
