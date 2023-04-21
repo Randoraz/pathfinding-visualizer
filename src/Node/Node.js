@@ -1,7 +1,7 @@
-import React from "react";
+import React, {forwardRef} from "react";
 import './Node.css';
 
-const Node = ({node, onNodeChange, onMouseDown, onMouseEnter, onMouseUp}) => {
+const Node = forwardRef(({node, onNodeChange, onMouseDown, onMouseEnter, onMouseUp}, ref) => {
     const row = node.row;
     const col = node.col;
     const type = node.type;
@@ -10,6 +10,7 @@ const Node = ({node, onNodeChange, onMouseDown, onMouseEnter, onMouseUp}) => {
     return (
         <div 
             id={`node-${row}-${col}`}
+            ref={ref}
             className={`node ${type === 'start' ? 'start-node' : 
                                 type === 'end' ? 'end-node' : 
                                 type === 'wall' ? 'wall-node' : 
@@ -19,6 +20,6 @@ const Node = ({node, onNodeChange, onMouseDown, onMouseEnter, onMouseUp}) => {
             onMouseEnter={() => onMouseEnter(node.row, node.col)}
             onMouseUp={() => onMouseUp()}></div>
     );
-};
+});
 
 export default Node;

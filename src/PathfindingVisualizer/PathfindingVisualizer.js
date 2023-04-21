@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Node from "../Node/Node";
 import './PathfindingVisualizer.css';
 import { dijkstra, getNodesInShortestPathOrder } from "../algorithm/dijkstra";
@@ -12,33 +12,51 @@ const PathfindingVisualizer = () => {
     const [isAnimating, setIsAnimating] = useState(false);
     const [mouseIsPressed, setMouseIsPressed] = useState(false);
 
+    const refsArray = useRef([]);
+
     useEffect(() => {
+        //Creates an Array to keep all the nodes' refs
+        if(refsArray.current.length !== 25) {
+            for(let i = 0; i < 25; i++) {
+                refsArray.current.push([]);
+                for(let j = 0; j < 25; j++) {
+                    refsArray.current[i].push(null);
+                };
+            };
+        };
+
         const nodesArray = [];
 
+        //If grid is already defined, only apply the necessary changes to it
         if(grid.length > 0) {
-            for(let row = 0; row < gridSize; row++) {
-                const currentRow = [];
-                for(let col = 0; col < gridSize; col++) {
-                    if(grid[row] !== undefined && grid[row][col] !== undefined) {
-                        const currentNode = {
-                            col: grid[row][col].col,
-                            row: grid[row][col].row,
-                            type: grid[row][col].type
-                        };
-                        currentRow.push(currentNode);
+            if(gridSize < grid.length) {
 
-                    } else {
-                        const currentNode = {
-                            col,
-                            row,
-                            type: compareNodes({col: col, row: row}, startNode) ? 'start' : compareNodes({col: col, row: row}, endNode) ? 'end' : 'normal'
-                        };
-                        currentRow.push(currentNode);
+                const newGrid = grid.map(row => row.map(node => { return {...node};}));
+                newGrid.pop();
+                newGrid.forEach(row => row.pop());
+                setGrid(newGrid);
+
+            } else if(gridSize > grid.length) {
+                const newGrid = grid.map(row => row.map(node => { return {...node};}));
+                newGrid.push(new Array(gridSize - 1).fill(null));
+                newGrid[newGrid.length - 1] = newGrid[newGrid.length - 1].map((node, nodeIndex) => {
+                    const newNode = {
+                        col: nodeIndex,
+                        row: newGrid.length - 1,
+                        type: compareNodes({col: nodeIndex, row: newGrid.length - 1}, startNode) ? 'start' : compareNodes({col: nodeIndex, row: newGrid.length - 1}, endNode) ? 'end' : 'normal'
                     };
-                };
-                
-                nodesArray.push(currentRow);
+                    return newNode;
+                });
+                newGrid.forEach((row, rowIndex) => row.push({
+                    col: newGrid.length - 1,
+                    row: rowIndex,
+                    type: compareNodes({col: newGrid.length - 1, row: rowIndex}, startNode) ? 'start' : compareNodes({col: newGrid.length - 1, row: rowIndex}, endNode) ? 'end' : 'normal'
+                }));
+
+                setGrid(getInitialGrid(newGrid));
             };
+
+        //Else, create the grid from scratch
         } else {
             for(let row = 0; row < gridSize; row++) {
                 const currentRow = [];
@@ -55,38 +73,41 @@ const PathfindingVisualizer = () => {
                 
                 nodesArray.push(currentRow);
             };
+
+            setGrid(getInitialGrid(nodesArray));
         };
         
-        setGrid(getInitialGrid(nodesArray));
        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [gridSize]);
 
+
+    //Resets the grid when the button Reset is pushed, but keeps start, end and wall nodes
     const resetGrid = () => {
         const newGrid = grid.map(row => {
             return row.map(node => {
                 if(node.type === 'start') {
-                    document.getElementById(`node-${node.row}-${node.col}`).className = 'node start-node';
+                    refsArray.current[node.row][node.col].className = 'node start-node';
                     return {
                         ...node,
                         type: 'start'
                     };
                 }
                 else if(node.type === 'end') {
-                    document.getElementById(`node-${node.row}-${node.col}`).className = 'node end-node';
+                    refsArray.current[node.row][node.col].className = 'node end-node';
                     return {
                         ...node,
                         type: 'end'
                     };
                 }
                 else if(node.type === 'wall') {
-                    document.getElementById(`node-${node.row}-${node.col}`).className = 'node wall-node';
+                    refsArray.current[node.row][node.col].className = 'node wall-node';
                     return {
                         ...node,
                         type: 'wall'
                     };
                 }
                 else {
-                    document.getElementById(`node-${node.row}-${node.col}`).className = 'node';
+                    refsArray.current[node.row][node.col].className = 'node';
                     return {
                         ...node,
                         type: 'normal'
@@ -97,10 +118,12 @@ const PathfindingVisualizer = () => {
         setGrid(newGrid);
     };
 
+    //Compares two nodes according to their position on the grid
     const compareNodes = (node1, node2) => {
         return node1.col === node2.col && node1.row === node2.row;
     };
 
+    //Creates the initial grid containing nodes with all necessary properties
     const getInitialGrid = (nodes) => {
         const initialGrid = [];
         nodes.forEach(row => {
@@ -115,6 +138,19 @@ const PathfindingVisualizer = () => {
         return initialGrid;
     };
 
+    //Adds the properties needed to run the algorithm to the node object
+    const createNode = (node) => {
+        return {
+            ...node,
+            neighbors: [],
+            isVisited: false,
+            distance: Infinity,
+            previousNode: null
+        };
+    };
+
+    //Animates the visited nodes in the order in which they were checked by the algorithm
+    //Then, calls "animateShortestPath" once it gets to the last visited node
     const animateDijkstra = (visitedNodesInOrder, nodesInShortestPathOrder) => {
         setIsAnimating(true);
         visitedNodesInOrder.forEach((node, nodeIndex) => {
@@ -126,24 +162,18 @@ const PathfindingVisualizer = () => {
             };
 
             setTimeout(() => {
-                // const newGrid = grid.slice();
-                // const newNode = {
-                //     ...node,
-                //     isVisited: true
-                // };
-                // newGrid[node.row][node.col] = newNode;
-                //setGrid(newGrid);
                 if(node.type !== 'start' && node.type !== 'end')
-                    document.getElementById(`node-${node.row}-${node.col}`).className = 'node visited-node';
+                    refsArray.current[node.row][node.col].className = 'node visited-node';
             }, 15 * nodeIndex);
         });
     };
 
+    //Animates the nodes that make the shortest path in the order in which they were checked by the algorithm
     const animateShortestPath = (nodesInShortestPathOrder) => {
         nodesInShortestPathOrder.forEach((node, nodeIndex) => {
             setTimeout(() => {
                 if(node.type !== 'start' && node.type !== 'end')
-                    document.getElementById(`node-${node.row}-${node.col}`).className = 'node path-node';
+                    refsArray.current[node.row][node.col].className = 'node path-node';
             }, 20 * nodeIndex);
 
             if(nodeIndex === nodesInShortestPathOrder.length - 1)
@@ -151,6 +181,7 @@ const PathfindingVisualizer = () => {
         });
     };
 
+    //Runs the algorithm, gets the result and calls "animateDijkstra" with it
     const visualizeDijkstra = () => {
         const functionGrid = grid.map(row => row.map(node => { return {...node};}));
         const start = functionGrid[startNode.row][startNode.col];
@@ -160,39 +191,15 @@ const PathfindingVisualizer = () => {
         animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder);
     };
 
-    const createNode = (node) => {
-        return {
-            ...node,
-            neighbors: [],
-            isVisited: false,
-            distance: Infinity,
-            previousNode: null
-        };
-    };
-
-    const getNewGridWithWallToggled = (grid, row, col) => {
-        // const newGrid = grid.map(row => row.map(node => { return {...node};}));
-        // const node = newGrid[row][col];
-        // const newNode = {
-        //     ...node,
-        //     type: node.type === 'wall' ? 'normal' : 'wall'
-        // };
-        // newGrid[row][col] = newNode;
-        // return newGrid;
+    //Toggles whether the node is a wall or not
+    const getNewGridWithWallToggled = (grid, row, col) => {        
         grid[row][col].type = grid[row][col].type === 'wall' ? 'normal' : 'wall';
 
         if(grid[row][col].type === 'wall')
-            document.getElementById(`node-${row}-${col}`).className = 'node wall-node';
+            refsArray.current[row][col].className = 'node wall-node';
         else
-            document.getElementById(`node-${row}-${col}`).className = 'node';
+            refsArray.current[row][col].className = 'node';
     };
-    
-    // const handleChange = (e) => {
-    //     if(e.target.value > 0)
-    //         setGridSize(+e.target.value);
-    //     else
-    //         setGridSize(1);
-    // };
 
     const handleOnMouseDown = (row, col) => {
         if(costumizingGrid !== 'wall' || isAnimating || grid[row][col].type === 'start' || grid[row][col].type === 'end')
@@ -200,7 +207,6 @@ const PathfindingVisualizer = () => {
         
         getNewGridWithWallToggled(grid, row, col);
         setMouseIsPressed(true);
-        //setGrid(newGrid);
     };
 
     const handleOnMouseEnter = (row, col) => {
@@ -208,7 +214,6 @@ const PathfindingVisualizer = () => {
             return;
 
         getNewGridWithWallToggled(grid, row, col);
-        //setGrid(newGrid);
     };
 
     const handleOnMouseUp = () => {
@@ -277,14 +282,19 @@ const PathfindingVisualizer = () => {
         setEndNode(newEndNode);
         setGrid(newGrid);
     };
+    
+    // const handleChange = (e) => {
+    //     if(e.target.value > 0)
+    //         setGridSize(+e.target.value);
+    //     else
+    //         setGridSize(1);
+    // };
 
     const increaseGridsize = () => {
         if(gridSize >= 25)
             return;
-
-            setTimeout(() => {
-                setGridSize(gridSize + 1);
-            }, 500);
+            
+        setGridSize(gridSize + 1);
     };
 
     const decreaseGridsize = () => {
@@ -292,11 +302,11 @@ const PathfindingVisualizer = () => {
             return;
 
         for(let row = 0; row < gridSize; row++) {
-            document.getElementById(`node-${row}-${gridSize - 1}`).className = 'node destroy-node';
+            refsArray.current[row][gridSize - 1].className = 'node destroy-node';
         }
 
         for(let col = 0; col < gridSize; col++) {
-            document.getElementById(`node-${gridSize - 1}-${col}`).className = 'node destroy-node';
+            refsArray.current[gridSize - 1][col].className = 'node destroy-node';
         }
 
         setTimeout(() => {
@@ -314,6 +324,7 @@ const PathfindingVisualizer = () => {
                                                     onMouseDown={handleOnMouseDown}
                                                     onMouseEnter={handleOnMouseEnter}
                                                     onMouseUp={handleOnMouseUp}
+                                                    ref={el => refsArray.current[rowIndex][nodeIndex] = el}
                                                     key={`${rowIndex}${nodeIndex}`} />);
             })}
         </div>
